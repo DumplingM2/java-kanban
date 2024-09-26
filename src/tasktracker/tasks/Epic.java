@@ -36,6 +36,10 @@ public class Epic extends Task {
         for (int subtaskId : subtaskIds) {
             Subtask subtask = subtasks.get(subtaskId);
             if (subtask != null) {
+                if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
+                    setStatus(TaskStatus.IN_PROGRESS);
+                    return;
+                }
                 if (subtask.getStatus() != TaskStatus.DONE) {
                     allDone = false;
                 }
@@ -47,9 +51,11 @@ public class Epic extends Task {
 
         if (allDone) {
             setStatus(TaskStatus.DONE);
-        } else if (allNew) {
+        }
+        else if (allNew) {
             setStatus(TaskStatus.NEW);
-        } else {
+        }
+        else {
             setStatus(TaskStatus.IN_PROGRESS);
         }
     }

@@ -28,11 +28,13 @@ public class TaskManager {
     }
 
     public void createSubtask(Subtask subtask) {
-        subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
+            subtasks.put(subtask.getId(), subtask);
             epic.addSubtask(subtask.getId());
             epic.updateStatus(subtasks);
+        } else {
+            System.out.println("Ошибка: Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
     }
 
@@ -73,10 +75,12 @@ public class TaskManager {
     }
 
     public void updateSubtask(Subtask subtask) {
-        subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
+            subtasks.put(subtask.getId(), subtask);
             epic.updateStatus(subtasks);
+        } else {
+            System.out.println("Ошибка: Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
     }
 
@@ -123,11 +127,17 @@ public class TaskManager {
         }
     }
 
-    // Метод получения списка всех подзадач определённого эпика
     public List<Subtask> getSubtasksOfEpic(int epicId) {
+        Epic epic = epics.get(epicId);
+        if (epic == null) {
+            System.out.println("Ошибка: Эпик с ID " + epicId + " не найден.");
+            return new ArrayList<>();
+        }
+
         List<Subtask> epicSubtasks = new ArrayList<>();
-        for (Subtask subtask : subtasks.values()) {
-            if (subtask.getEpicId() == epicId) {
+        for (int subtaskId : epic.getSubtaskIds()) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null) {
                 epicSubtasks.add(subtask);
             }
         }
