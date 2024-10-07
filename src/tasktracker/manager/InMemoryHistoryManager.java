@@ -9,12 +9,13 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void add(Task task) {
-        if (history.size() == 10) {
-            history.remove(0);  // Удаляем старый элемент, если история превышает 10 задач
+        if (task != null) {
+            if (history.size() == 10) {
+                history.remove(0);  // Удаляем старый элемент, если история превышает 10 задач
+            }
+            history.add(task);
         }
-        history.add(task);
     }
-
     @Override
     public List<Task> getHistory() {
         return new ArrayList<>(history);  // Возвращаем копию истории

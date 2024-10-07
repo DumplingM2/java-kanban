@@ -31,10 +31,9 @@ public class InMemoryTaskManager implements TaskManager {
             if (epic != null) {
                 epic.updateStatus(subtasks);
             }
-        } else {
-            System.out.println("Ошибка: подзадача с ID " + subtask.getId() + " не найдена.");
         }
     }
+
     // Методы создания задач, эпиков и подзадач
     @Override
     public void createTask(Task task) {
@@ -60,21 +59,27 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        historyManager.add(task);  // Добавляем задачу в историю
+        if (task != null) {
+            historyManager.add(task);
+        }
         return task;
     }
 
     @Override
     public Epic getEpicById(int id) {
         Epic epic = epics.get(id);
-        historyManager.add(epic);  // Добавляем эпик в историю
+        if (epic != null) {
+            historyManager.add(epic);
+        }
         return epic;
     }
 
     @Override
     public Subtask getSubtaskById(int id) {
         Subtask subtask = subtasks.get(id);
-        historyManager.add(subtask);  // Добавляем подзадачу в историю
+        if (subtask != null) {
+            historyManager.add(subtask);
+        }
         return subtask;
     }
 
@@ -106,8 +111,6 @@ public class InMemoryTaskManager implements TaskManager {
 
             // Пересчитываем статус эпика в зависимости от статусов его подзадач
             epic.updateStatus(subtasks);
-        } else {
-            System.out.println("Ошибка: эпик с ID " + epic.getId() + " не найден.");
         }
     }
 
@@ -117,8 +120,6 @@ public class InMemoryTaskManager implements TaskManager {
         if (tasks.containsKey(task.getId())) {
             // Обновляем задачу в хранилище
             tasks.put(task.getId(), task);
-        } else {
-            System.out.println("Ошибка: задача с ID " + task.getId() + " не найдена.");
         }
     }
 
