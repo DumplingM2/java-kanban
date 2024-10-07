@@ -15,12 +15,15 @@ public class Subtask extends Task {
     }
 
     public void setEpicId(int epicId) {
+        if (this.getId() == epicId) {
+            throw new IllegalArgumentException("Подзадача не может быть своим эпиком.");
+        }
         this.epicId = epicId;
     }
 
     @Override
     public String toString() {
-        return "tasktracker.tasks.Subtask{" +
+        return "Subtask{" +
                 "title='" + getTitle() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", id=" + getId() +

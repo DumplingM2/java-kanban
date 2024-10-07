@@ -1,6 +1,7 @@
 package tasktracker;
 
 import tasktracker.manager.TaskManager;
+import tasktracker.manager.Managers;
 import tasktracker.tasks.Epic;
 import tasktracker.tasks.Subtask;
 import tasktracker.tasks.Task;
@@ -8,7 +9,7 @@ import tasktracker.status.TaskStatus;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
 
         // Создаём задачи
         Task task1 = new Task("Переезд", "Организация переезда", manager.generateId(), TaskStatus.NEW);
@@ -63,5 +64,11 @@ public class Main {
 
         System.out.println("Все эпики после удаления:");
         System.out.println(manager.getAllEpics());
+
+        // Вывод истории
+        System.out.println("История просмотров:");
+        for (Task task : manager.getHistory()) {
+            System.out.println(task);
+        }
     }
 }

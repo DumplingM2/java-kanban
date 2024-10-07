@@ -8,7 +8,6 @@ public class Task {
     private int id;
     private TaskStatus status;
 
-    // Конструктор
     public Task(String title, String description, int id, TaskStatus status) {
         this.title = title;
         this.description = description;
@@ -29,7 +28,6 @@ public class Task {
         return description;
     }
 
-    // Добавьте сеттер для description, если необходимо
     public void setDescription(String description) {
         this.description = description;
     }
@@ -46,14 +44,11 @@ public class Task {
         this.status = status;
     }
 
-    // Переопределение методов equals и hashCode
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Task task = (Task) o;
-
         return id == task.id;
     }
 
@@ -62,10 +57,9 @@ public class Task {
         return id;
     }
 
-    // Переопределение метода toString
     @Override
     public String toString() {
-        return "tasktracker.tasks.Task{" +
+        return "Task{" +
                 "title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +

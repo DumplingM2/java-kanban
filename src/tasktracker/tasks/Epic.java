@@ -1,4 +1,5 @@
 package tasktracker.tasks;
+
 import tasktracker.status.TaskStatus;
 
 import java.util.ArrayList;
@@ -17,6 +18,9 @@ public class Epic extends Task {
     }
 
     public void addSubtask(int subtaskId) {
+        if (this.getId() == subtaskId) {
+            throw new IllegalArgumentException("Эпик не может быть подзадачей самого себя.");
+        }
         subtaskIds.add(subtaskId);
     }
 
@@ -51,18 +55,16 @@ public class Epic extends Task {
 
         if (allDone) {
             setStatus(TaskStatus.DONE);
-        }
-        else if (allNew) {
+        } else if (allNew) {
             setStatus(TaskStatus.NEW);
-        }
-        else {
+        } else {
             setStatus(TaskStatus.IN_PROGRESS);
         }
     }
 
     @Override
     public String toString() {
-        return "tasktracker.tasks.Epic{" +
+        return "Epic{" +
                 "title='" + getTitle() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", id=" + getId() +
