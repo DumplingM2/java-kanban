@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import tasktracker.tasks.Task;
-import tasktracker.manager.HistoryManager;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private final Map<Integer, Node> historyMap = new HashMap<>();
