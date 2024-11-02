@@ -14,73 +14,42 @@ import static org.junit.jupiter.api.Assertions.*;
 class HistoryManagerTest {
 
     private HistoryManager historyManager;
-    private TaskManager taskManager;  // Добавляем taskManager
+    private TaskManager taskManager;
 
     @BeforeEach
     void setUp() {
-        historyManager = Managers.getDefaultHistory();  // Инициализация менеджера истории
-        taskManager = Managers.getDefault();  // Инициализация менеджера задач
+        historyManager = Managers.getDefaultHistory();
+        taskManager = Managers.getDefault();
     }
 
     @Test
-    void shouldAddTaskToHistory() {
-        Task task = new Task("Test Task", "Description", 1, TaskStatus.NEW);
+    void shouldAddTaskToHistoryAndKeepOrder() {
+        Task task1 = new Task("Task 1", "Description 1", 1, TaskStatus.NEW);
+        Task task2 = new Task("Task 2", "Description 2", 2, TaskStatus.NEW);
 
-        historyManager.add(task);
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task1);  // Повторный просмотр
+
         List<Task> history = historyManager.getHistory();
 
-        assertNotNull(history, "История не должна быть пустой.");
-        assertEquals(1, history.size(), "История должна содержать одну задачу.");
-        assertEquals(task, history.get(0), "Задача в истории не совпадает с оригиналом.");
+        assertEquals(2, history.size(), "История должна содержать две уникальные задачи.");
+        assertEquals(task2, history.get(0), "Последняя добавленная задача должна быть первой.");
+        assertEquals(task1, history.get(1), "Первая добавленная задача должна быть последней после повторного добавления.");
     }
 
     @Test
-    void shouldLimitHistoryToTenTasks() {
-        for (int i = 1; i <= 11; i++) {
-            Task task = new Task("Task " + i, "Description", taskManager.generateId(), TaskStatus.NEW);
-            taskManager.createTask(task);
-            taskManager.getTaskById(task.getId());  // Добавляем задачу в историю
-        }
+    void shouldRemoveTaskFromHistory() {
+        Task task1 = new Task("Task 1", "Description 1", 1, TaskStatus.NEW);
+        Task task2 = new Task("Task 2", "Description 2", 2, TaskStatus.NEW);
 
-        List<Task> history = taskManager.getHistory();
-        assertEquals(10, history.size(), "История должна содержать только 10 задач.");
-        assertEquals("Task 2", history.get(0).getTitle(), "Самая старая задача должна быть удалена из истории.");
-    }
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.remove(task1.getId());
 
-    @Test
-    void shouldUpdateTask() {
-        Task task = new Task("Test Task", "Description", taskManager.generateId(), TaskStatus.NEW);
-        taskManager.createTask(task);
+        List<Task> history = historyManager.getHistory();
 
-        task.setTitle("Updated Task");
-        task.setDescription("Updated Description");
-        task.setStatus(TaskStatus.DONE);
-        taskManager.updateTask(task);
-
-        Task updatedTask = taskManager.getTaskById(task.getId());
-        assertEquals("Updated Task", updatedTask.getTitle(), "Название задачи должно быть обновлено.");
-        assertEquals("Updated Description", updatedTask.getDescription(), "Описание задачи должно быть обновлено.");
-        assertEquals(TaskStatus.DONE, updatedTask.getStatus(), "Статус задачи должен быть обновлен.");
-    }
-
-    @Test
-    void shouldUpdateEpicStatusWhenSubtasksChange() {
-        Epic epic = new Epic("Epic", "Description", taskManager.generateId());
-        taskManager.createEpic(epic);
-
-        Subtask subtask1 = new Subtask("Subtask 1", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
-        Subtask subtask2 = new Subtask("Subtask 2", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
-        taskManager.createSubtask(subtask1);
-        taskManager.createSubtask(subtask2);
-
-        subtask1.setStatus(TaskStatus.DONE);
-        taskManager.updateSubtask(subtask1);
-
-        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getEpicById(epic.getId()).getStatus(), "Статус эпика должен быть IN_PROGRESS.");
-
-        subtask2.setStatus(TaskStatus.DONE);
-        taskManager.updateSubtask(subtask2);
-
-        assertEquals(TaskStatus.DONE, taskManager.getEpicById(epic.getId()).getStatus(), "Статус эпика должен быть DONE.");
+        assertEquals(1, history.size(), "История должна содержать одну задачу после удаления.");
+        assertEquals(task2, history.get(0), "Оставшаяся задача должна быть task2.");
     }
 }
