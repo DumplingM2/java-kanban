@@ -2,8 +2,6 @@ package tasktracker.manager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import tasktracker.tasks.Epic;
-import tasktracker.tasks.Subtask;
 import tasktracker.tasks.Task;
 import tasktracker.status.TaskStatus;
 
