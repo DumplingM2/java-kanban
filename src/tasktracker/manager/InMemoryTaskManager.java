@@ -141,7 +141,8 @@ public class InMemoryTaskManager implements TaskManager {
     // Методы удаления задач
     @Override
     public void deleteTaskById(int id) {
-        tasks.remove(id);
+        tasks.remove(id);  // Удаляем задачу из списка задач
+        historyManager.remove(id);  // Удаляем задачу из истории просмотров
     }
 
     @Override

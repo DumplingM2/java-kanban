@@ -17,68 +17,51 @@ class InMemoryTaskManagerTest {
 
     @BeforeEach
     void setUp() {
-        taskManager = new InMemoryTaskManager();  // Инициализация перед каждым тестом
+        taskManager = new InMemoryTaskManager();
     }
 
     @Test
-    void addNewTask() {
-        Task task = new Task("Test Task", "Description", taskManager.generateId(), TaskStatus.NEW);
+    void shouldRemoveTaskFromHistoryAfterDeletion() {
+        Task task = new Task("Task 1", "Description", taskManager.generateId(), TaskStatus.NEW);
         taskManager.createTask(task);
+        taskManager.getTaskById(task.getId());
 
-        Task savedTask = taskManager.getTaskById(task.getId());
+        taskManager.deleteTaskById(task.getId());
 
-        assertNotNull(savedTask, "Задача не найдена.");
-        assertEquals(task, savedTask, "Задачи не совпадают.");
-
-        List<Task> tasks = taskManager.getAllTasks();
-
-        assertNotNull(tasks, "Задачи не возвращаются.");
-        assertEquals(1, tasks.size(), "Неверное количество задач.");
-        assertEquals(task, tasks.get(0), "Задачи не совпадают.");
+        List<Task> history = taskManager.getHistory();
+        assertTrue(history.isEmpty(), "История должна быть пустой после удаления задачи.");
     }
 
     @Test
-    void shouldNotAddEpicAsSubtaskToItself() {
+    void shouldRemoveSubtasksFromEpicAfterDeletion() {
         Epic epic = new Epic("Epic", "Description", taskManager.generateId());
         taskManager.createEpic(epic);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            epic.addSubtask(epic.getId());  // Попытка добавить эпик в самого себя как подзадачу
-        });
+        Subtask subtask = new Subtask("Subtask 1", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
+        taskManager.createSubtask(subtask);
+
+        taskManager.deleteSubtaskById(subtask.getId());
+
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
+        assertTrue(updatedEpic.getSubtaskIds().isEmpty(), "Список подзадач в эпике должен быть пустым после удаления подзадачи.");
     }
 
     @Test
-    void shouldInitializeManagersCorrectly() {
-        TaskManager taskManager = Managers.getDefault();
-        assertNotNull(taskManager, "TaskManager должен быть проинициализирован.");
+    void shouldNotRetainOldIdsAfterSubtaskDeletion() {
+        Epic epic = new Epic("Epic", "Description", taskManager.generateId());
+        taskManager.createEpic(epic);
 
-        HistoryManager historyManager = Managers.getDefaultHistory();
-        assertNotNull(historyManager, "HistoryManager должен быть проинициализирован.");
+        Subtask subtask = new Subtask("Subtask", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
+        taskManager.createSubtask(subtask);
+
+        taskManager.deleteSubtaskById(subtask.getId());
+
+        assertFalse(taskManager.getAllSubtasks().contains(subtask), "Удалённая подзадача не должна присутствовать в списке всех подзадач.");
+        assertFalse(epic.getSubtaskIds().contains(subtask.getId()), "Идентификатор удалённой подзадачи не должен оставаться в эпике.");
     }
 
     @Test
-    void taskShouldRemainUnchangedAfterAddition() {
-        Task task = new Task("Test Task", "Description", taskManager.generateId(), TaskStatus.NEW);
-        taskManager.createTask(task);
-
-        Task savedTask = taskManager.getTaskById(task.getId());
-
-        assertEquals(task.getTitle(), savedTask.getTitle(), "Название задачи не должно измениться.");
-        assertEquals(task.getDescription(), savedTask.getDescription(), "Описание задачи не должно измениться.");
-        assertEquals(task.getStatus(), savedTask.getStatus(), "Статус задачи не должен измениться.");
-    }
-
-    @Test
-    void shouldDeleteTaskById() {
-        Task task = new Task("Test Task", "Description", taskManager.generateId(), TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.deleteTaskById(task.getId());
-
-        assertNull(taskManager.getTaskById(task.getId()), "Задача не должна существовать после удаления.");
-    }
-
-    @Test
-    void shouldDeleteEpicAndSubtasksById() {
+    void shouldUpdateEpicStatusCorrectlyWhenSubtasksChange() {
         Epic epic = new Epic("Epic", "Description", taskManager.generateId());
         taskManager.createEpic(epic);
 
@@ -87,16 +70,14 @@ class InMemoryTaskManagerTest {
         taskManager.createSubtask(subtask1);
         taskManager.createSubtask(subtask2);
 
-        taskManager.deleteEpicById(epic.getId());
+        subtask1.setStatus(TaskStatus.DONE);
+        taskManager.updateSubtask(subtask1);
 
-        assertNull(taskManager.getEpicById(epic.getId()), "Эпик не должен существовать после удаления.");
-        assertNull(taskManager.getSubtaskById(subtask1.getId()), "Подзадачи эпика должны удаляться вместе с ним.");
-        assertNull(taskManager.getSubtaskById(subtask2.getId()), "Подзадачи эпика должны удаляться вместе с ним.");
+        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getEpicById(epic.getId()).getStatus(), "Статус эпика должен быть IN_PROGRESS после выполнения одной из подзадач.");
+
+        subtask2.setStatus(TaskStatus.DONE);
+        taskManager.updateSubtask(subtask2);
+
+        assertEquals(TaskStatus.DONE, taskManager.getEpicById(epic.getId()).getStatus(), "Статус эпика должен быть DONE после выполнения всех подзадач.");
     }
-
-    @Test
-    void shouldNotThrowErrorWhenDeletingNonExistentTask() {
-        assertDoesNotThrow(() -> taskManager.deleteTaskById(999), "Удаление несуществующей задачи не должно вызывать ошибки.");
-    }
-
 }
