@@ -5,6 +5,7 @@ import tasktracker.status.TaskStatus;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Epic extends Task {
     private final List<Integer> subtaskIds = new ArrayList<>();
@@ -28,7 +29,7 @@ public class Epic extends Task {
         subtaskIds.remove((Integer) subtaskId);
     }
 
-    public void updateStatus(HashMap<Integer, Subtask> subtasks) {
+    public void updateStatus(Map<Integer, Subtask> subtasks) {
         if (subtaskIds.isEmpty()) {
             setStatus(TaskStatus.NEW);
             return;
@@ -40,10 +41,6 @@ public class Epic extends Task {
         for (int subtaskId : subtaskIds) {
             Subtask subtask = subtasks.get(subtaskId);
             if (subtask != null) {
-                if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
-                    setStatus(TaskStatus.IN_PROGRESS);
-                    return;
-                }
                 if (subtask.getStatus() != TaskStatus.DONE) {
                     allDone = false;
                 }
