@@ -5,6 +5,8 @@ import tasktracker.tasks.Epic;
 import tasktracker.tasks.Subtask;
 import tasktracker.tasks.TaskType;
 import tasktracker.status.TaskStatus;
+import tasktracker.exceptions.ManagerSaveException;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,7 +17,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
 
     public static void main(String[] args) {
-        File file = new File("tasks.csv");
+
+        File file = new File("src/tasktracker/resources/tasks.csv");
+
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs(); // Создает каталог resources, если он не существует
+        }
 
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
 
@@ -59,7 +66,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         this.file = file;
     }
 
-    void save() {
+    private void save() {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("id,type,name,status,description,epic\n");
             for (Task task : getAllTasks()) {
@@ -74,6 +81,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка сохранения в файл", e);
         }
+    }
+    //Для теста save, т.к. он не виден в тесте из-за private.
+    public void saveToFile() {
+        save();
     }
 
     private String toString(Task task) {
@@ -209,12 +220,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void deleteAllSubtasks() {
         super.deleteAllSubtasks();
         save();
-    }
-
-    // Исключение для обработки ошибок сохранения
-    public static class ManagerSaveException extends RuntimeException {
-        public ManagerSaveException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
 }

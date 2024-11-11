@@ -26,7 +26,7 @@ class FileBackedTaskManagerTest {
     @Test
     void shouldSaveAndLoadEmptyFile() {
         FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
-        manager.save();
+        manager.saveToFile();
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
         assertTrue(loadedManager.getAllTasks().isEmpty(), "Список задач должен быть пустым после загрузки из пустого файла.");
@@ -46,7 +46,7 @@ class FileBackedTaskManagerTest {
         manager.createEpic(epic1);
         manager.createSubtask(subtask1);
 
-        manager.save();
+        manager.saveToFile();
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
