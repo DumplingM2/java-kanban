@@ -17,7 +17,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
 
     public static void main(String[] args) {
-        
         File file = new File("src/tasktracker/resources/tasks.csv");
 
         if (!file.getParentFile().exists()) {
@@ -82,6 +81,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             throw new ManagerSaveException("Ошибка сохранения в файл", e);
         }
     }
+
     //Для теста save, т.к. он не виден в тесте из-за private.
     public void saveToFile() {
         save();
