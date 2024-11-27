@@ -100,33 +100,47 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else if (task instanceof Subtask) {
             type = TaskType.SUBTASK;
         }
-        String duration = task.getDuration() != null ? String.valueOf(task.getDuration().toMinutes()) : "0";
+        String duration = task.getDuration() != null ? String.valueOf(task.getDuration().toMinutes()) : "";
         String startTime = task.getStartTime() != null ? task.getStartTime().toString() : "";
         String epicId = task instanceof Subtask ? String.valueOf(((Subtask) task).getEpicId()) : "";
-        return String.join(",", String.valueOf(task.getId()), type.toString(), task.getTitle(), task.getStatus().toString(),
-                task.getDescription(), duration, startTime, epicId);
+        return String.join(",",
+                String.valueOf(task.getId()),
+                type.toString(),
+                task.getTitle(),
+                task.getStatus().toString(),
+                task.getDescription(),
+                duration,
+                startTime,
+                epicId
+        );
     }
 
     private static Task fromString(String value) {
         String[] fields = value.split(",");
+        if (fields.length < 5) { // Минимум 5 полей: id, type, name, status, description
+            throw new IllegalArgumentException("Некорректная строка CSV: " + value);
+        }
+
         int id = Integer.parseInt(fields[0]);
         TaskType type = TaskType.valueOf(fields[1]);
         String name = fields[2];
         TaskStatus status = TaskStatus.valueOf(fields[3]);
         String description = fields[4];
-        Duration duration = fields[5].isEmpty() ? Duration.ZERO : Duration.ofMinutes(Long.parseLong(fields[5]));
-        LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
+        Duration duration = fields.length > 5 && !fields[5].isEmpty() ? Duration.ofMinutes(Long.parseLong(fields[5])) : null;
+        LocalDateTime startTime = fields.length > 6 && !fields[6].isEmpty() ? LocalDateTime.parse(fields[6]) : null;
 
-        switch (type) {
-            case TASK:
-                return new Task(name, description, id, status, duration, startTime);
-            case EPIC:
-                return new Epic(name, description, id);
-            case SUBTASK:
-                int epicId = Integer.parseInt(fields[7]);
-                return new Subtask(name, description, id, status, duration, startTime, epicId);
-            default:
-                throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+        if (type == TaskType.TASK) {
+            return new Task(name, description, id, status, duration, startTime);
+        } else if (type == TaskType.EPIC) {
+            return new Epic(name, description, id);
+        } else if (type == TaskType.SUBTASK) {
+            if (fields.length < 8 || fields[7].isEmpty()) {
+                throw new IllegalArgumentException("Некорректная строка CSV для Subtask: " + value);
+            }
+            int epicId = Integer.parseInt(fields[7]);
+            return new Subtask(name, description, id, status, duration, startTime, epicId);
+        } else {
+            throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
     }
 

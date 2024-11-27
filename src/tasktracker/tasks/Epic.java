@@ -37,7 +37,6 @@ public class Epic extends Task {
         subtaskIds.remove((Integer) subtaskId);
     }
 
-    // Метод для обновления статуса эпика и расчётных полей
     public void updateStatus(Map<Integer, Subtask> subtasks) {
         if (subtaskIds.isEmpty()) {
             setStatus(TaskStatus.NEW);
@@ -65,8 +64,10 @@ public class Epic extends Task {
                     allNew = false;
                 }
 
-                // Рассчитываем duration
-                duration = duration.plus(subtask.getDuration());
+                // Рассчитываем duration (проверяем, что getDuration() не null)
+                if (subtask.getDuration() != null) {
+                    duration = duration.plus(subtask.getDuration());
+                }
 
                 // Рассчитываем startTime
                 if (startTime == null || (subtask.getStartTime() != null && subtask.getStartTime().isBefore(startTime))) {
@@ -90,6 +91,7 @@ public class Epic extends Task {
             setStatus(TaskStatus.IN_PROGRESS);
         }
     }
+
 
     // Переопределяем геттеры для расчётных полей
     @Override
@@ -125,16 +127,12 @@ public class Epic extends Task {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Epic)) return false;
-        if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return Objects.equals(subtaskIds, epic.subtaskIds) &&
-                Objects.equals(duration, epic.duration) &&
-                Objects.equals(startTime, epic.startTime) &&
-                Objects.equals(endTime, epic.endTime);
+        return getId() == epic.getId(); // Проверяем только id
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), subtaskIds, duration, startTime, endTime);
+        return Objects.hash(getId()); // Используем только id
     }
 }

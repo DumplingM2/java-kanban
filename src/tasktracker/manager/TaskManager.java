@@ -49,4 +49,7 @@ public interface TaskManager {
     List<Task> getHistory();
 
     int generateId();
+
+    // Новый метод: задачи в порядке приоритета
+    List<Task> getPrioritizedTasks();
 }

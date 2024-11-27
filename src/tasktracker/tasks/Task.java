@@ -24,6 +24,9 @@ public class Task {
         this.startTime = startTime;
     }
 
+    public Task(String title, String description, int id, TaskStatus taskStatus) {
+    }
+
     // Геттеры и сеттеры
     public String getTitle() {
         return title;
