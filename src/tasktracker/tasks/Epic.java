@@ -7,13 +7,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class Epic extends Task {
     private final List<Integer> subtaskIds = new ArrayList<>(); // Список ID подзадач
-    private Duration duration = Duration.ZERO; // Расчётное поле: общая продолжительность эпика
-    private LocalDateTime startTime; // Расчётное поле: время начала эпика
-    private LocalDateTime endTime; // Расчётное поле: время завершения эпика
 
     public Epic(String title, String description, int id) {
         super(title, description, id, TaskStatus.NEW, Duration.ZERO, null);
@@ -40,18 +36,17 @@ public class Epic extends Task {
     public void updateStatus(Map<Integer, Subtask> subtasks) {
         if (subtaskIds.isEmpty()) {
             setStatus(TaskStatus.NEW);
-            duration = Duration.ZERO;
-            startTime = null;
-            endTime = null;
+            setDuration(Duration.ZERO);
+            setStartTime(null);
             return;
         }
 
         boolean allDone = true;
         boolean allNew = true;
 
-        duration = Duration.ZERO; // Обнуляем продолжительность перед расчетом
-        startTime = null; // Обнуляем время начала
-        endTime = null; // Обнуляем время окончания
+        Duration calculatedDuration = Duration.ZERO;
+        LocalDateTime calculatedStartTime = null;
+        LocalDateTime calculatedEndTime = null;
 
         for (int subtaskId : subtaskIds) {
             Subtask subtask = subtasks.get(subtaskId);
@@ -66,21 +61,19 @@ public class Epic extends Task {
 
                 // Рассчитываем duration (проверяем, что getDuration() не null)
                 if (subtask.getDuration() != null) {
-                    duration = duration.plus(subtask.getDuration());
+                    calculatedDuration = calculatedDuration.plus(subtask.getDuration());
                 }
 
                 // Рассчитываем startTime
-                if (startTime == null || (subtask.getStartTime() != null && subtask.getStartTime().isBefore(startTime))) {
-                    startTime = subtask.getStartTime();
-                }
-
-                // Рассчитываем endTime
-                LocalDateTime subtaskEndTime = subtask.getEndTime();
-                if (endTime == null || (subtaskEndTime != null && subtaskEndTime.isAfter(endTime))) {
-                    endTime = subtaskEndTime;
+                if (calculatedStartTime == null || (subtask.getStartTime() != null && subtask.getStartTime().isBefore(calculatedStartTime))) {
+                    calculatedStartTime = subtask.getStartTime();
                 }
             }
         }
+
+        // Устанавливаем расчётные поля
+        setDuration(calculatedDuration);
+        setStartTime(calculatedStartTime);
 
         // Устанавливаем статус эпика
         if (allDone) {
@@ -92,23 +85,6 @@ public class Epic extends Task {
         }
     }
 
-
-    // Переопределяем геттеры для расчётных полей
-    @Override
-    public Duration getDuration() {
-        return duration;
-    }
-
-    @Override
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    @Override
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
     @Override
     public String toString() {
         return "Epic{" +
@@ -117,9 +93,9 @@ public class Epic extends Task {
                 ", id=" + getId() +
                 ", status=" + getStatus() +
                 ", subtaskIds=" + subtaskIds +
-                ", duration=" + (duration != null ? duration.toMinutes() + " minutes" : "null") +
-                ", startTime=" + (startTime != null ? startTime : "null") +
-                ", endTime=" + (endTime != null ? endTime : "null") +
+                ", duration=" + (getDuration() != null ? getDuration().toMinutes() + " minutes" : "null") +
+                ", startTime=" + (getStartTime() != null ? getStartTime() : "null") +
+                ", endTime=" + (getEndTime() != null ? getEndTime() : "null") +
                 '}';
     }
 
@@ -133,6 +109,6 @@ public class Epic extends Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId()); // Используем только id
+        return Integer.hashCode(getId()); // Используем только id
     }
 }

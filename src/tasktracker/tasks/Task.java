@@ -11,8 +11,8 @@ public class Task {
     private String description;
     private int id;
     private TaskStatus status;
-    private Duration duration;
-    private LocalDateTime startTime;
+    protected Duration duration;
+    protected LocalDateTime startTime;
 
     // Конструктор с новыми полями
     public Task(String title, String description, int id, TaskStatus status, Duration duration, LocalDateTime startTime) {
