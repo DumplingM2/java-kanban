@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -25,16 +27,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
 
-        Task task1 = new Task("Task 1", "Description of task 1", manager.generateId(), TaskStatus.NEW);
-        Task task2 = new Task("Task 2", "Description of task 2", manager.generateId(), TaskStatus.IN_PROGRESS);
+        Task task1 = new Task("Task 1", "Description of task 1", manager.generateId(), TaskStatus.NEW,
+                Duration.ofMinutes(30), LocalDateTime.of(2023, 1, 1, 10, 0));
+        Task task2 = new Task("Task 2", "Description of task 2", manager.generateId(), TaskStatus.IN_PROGRESS,
+                Duration.ofMinutes(60), LocalDateTime.of(2023, 1, 1, 11, 0));
         manager.createTask(task1);
         manager.createTask(task2);
 
         Epic epic1 = new Epic("Epic 1", "Description of epic 1", manager.generateId());
         manager.createEpic(epic1);
 
-        Subtask subtask1 = new Subtask("Subtask 1", "Description of subtask 1", manager.generateId(), TaskStatus.NEW, epic1.getId());
-        Subtask subtask2 = new Subtask("Subtask 2", "Description of subtask 2", manager.generateId(), TaskStatus.DONE, epic1.getId());
+        Subtask subtask1 = new Subtask("Subtask 1", "Description of subtask 1", manager.generateId(), TaskStatus.NEW,
+                Duration.ofMinutes(120), LocalDateTime.of(2023, 1, 1, 12, 0), epic1.getId());
+        Subtask subtask2 = new Subtask("Subtask 2", "Description of subtask 2", manager.generateId(), TaskStatus.DONE,
+                Duration.ofMinutes(90), LocalDateTime.of(2023, 1, 1, 14, 0), epic1.getId());
         manager.createSubtask(subtask1);
         manager.createSubtask(subtask2);
 
@@ -67,7 +73,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write("id,type,name,status,description,duration,startTime,epic\n");
             for (Task task : getAllTasks()) {
                 writer.write(toString(task) + "\n");
             }
@@ -82,7 +88,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    //Для теста save, т.к. он не виден в тесте из-за private.
+    // Для тестов save
     public void saveToFile() {
         save();
     }
@@ -94,28 +100,47 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else if (task instanceof Subtask) {
             type = TaskType.SUBTASK;
         }
-        String epicId = (task instanceof Subtask) ? String.valueOf(((Subtask) task).getEpicId()) : "";
-        return String.join(",", String.valueOf(task.getId()), type.toString(), task.getTitle(), task.getStatus().toString(), task.getDescription(), epicId);
+        String duration = task.getDuration() != null ? String.valueOf(task.getDuration().toMinutes()) : "";
+        String startTime = task.getStartTime() != null ? task.getStartTime().toString() : "";
+        String epicId = task instanceof Subtask ? String.valueOf(((Subtask) task).getEpicId()) : "";
+        return String.join(",",
+                String.valueOf(task.getId()),
+                type.toString(),
+                task.getTitle(),
+                task.getStatus().toString(),
+                task.getDescription(),
+                duration,
+                startTime,
+                epicId
+        );
     }
 
     private static Task fromString(String value) {
         String[] fields = value.split(",");
+        if (fields.length < 5) { // Минимум 5 полей: id, type, name, status, description
+            throw new IllegalArgumentException("Некорректная строка CSV: " + value);
+        }
+
         int id = Integer.parseInt(fields[0]);
         TaskType type = TaskType.valueOf(fields[1]);
         String name = fields[2];
         TaskStatus status = TaskStatus.valueOf(fields[3]);
         String description = fields[4];
+        Duration duration = fields.length > 5 && !fields[5].isEmpty() ? Duration.ofMinutes(Long.parseLong(fields[5])) : null;
+        LocalDateTime startTime = fields.length > 6 && !fields[6].isEmpty() ? LocalDateTime.parse(fields[6]) : null;
 
-        switch (type) {
-            case TASK:
-                return new Task(name, description, id, status);
-            case EPIC:
-                return new Epic(name, description, id);
-            case SUBTASK:
-                int epicId = Integer.parseInt(fields[5]);
-                return new Subtask(name, description, id, status, epicId);
-            default:
-                throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+        if (type == TaskType.TASK) {
+            return new Task(name, description, id, status, duration, startTime);
+        } else if (type == TaskType.EPIC) {
+            return new Epic(name, description, id);
+        } else if (type == TaskType.SUBTASK) {
+            if (fields.length < 8 || fields[7].isEmpty()) {
+                throw new IllegalArgumentException("Некорректная строка CSV для Subtask: " + value);
+            }
+            int epicId = Integer.parseInt(fields[7]);
+            return new Subtask(name, description, id, status, duration, startTime, epicId);
+        } else {
+            throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
     }
 
@@ -123,24 +148,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try {
             List<String> lines = Files.readAllLines(file.toPath());
-
             for (String line : lines.subList(1, lines.size())) {
                 Task task = fromString(line);
                 if (task instanceof Epic) {
                     manager.createEpic((Epic) task);
-                }
-            }
-
-            for (String line : lines.subList(1, lines.size())) {
-                Task task = fromString(line);
-                if (task instanceof Subtask) {
+                } else if (task instanceof Subtask) {
                     manager.createSubtask((Subtask) task);
-                }
-            }
-
-            for (String line : lines.subList(1, lines.size())) {
-                Task task = fromString(line);
-                if (task instanceof Task && !(task instanceof Epic) && !(task instanceof Subtask)) {
+                } else {
                     manager.createTask(task);
                 }
             }

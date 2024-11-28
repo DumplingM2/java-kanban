@@ -3,10 +3,12 @@ package tasktracker.manager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasktracker.tasks.Task;
-import tasktracker.status.TaskStatus;
 import tasktracker.tasks.Epic;
 import tasktracker.tasks.Subtask;
+import tasktracker.status.TaskStatus;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +24,14 @@ class InMemoryTaskManagerTest {
 
     @Test
     void shouldRemoveTaskFromHistoryAfterDeletion() {
-        Task task = new Task("Task 1", "Description", taskManager.generateId(), TaskStatus.NEW);
+        Task task = new Task(
+                "Task 1",
+                "Description",
+                taskManager.generateId(),
+                TaskStatus.NEW,
+                Duration.ofMinutes(60),
+                LocalDateTime.now()
+        );
         taskManager.createTask(task);
         taskManager.getTaskById(task.getId());
 
@@ -37,7 +46,15 @@ class InMemoryTaskManagerTest {
         Epic epic = new Epic("Epic", "Description", taskManager.generateId());
         taskManager.createEpic(epic);
 
-        Subtask subtask = new Subtask("Subtask 1", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
+        Subtask subtask = new Subtask(
+                        "Subtask 1",
+                        "Description",
+                        taskManager.generateId(),
+                        TaskStatus.NEW,
+                Duration.ofMinutes(90),
+                LocalDateTime.now().plusHours(1),
+                epic.getId()
+                );
         taskManager.createSubtask(subtask);
 
         taskManager.deleteSubtaskById(subtask.getId());
@@ -51,7 +68,15 @@ class InMemoryTaskManagerTest {
         Epic epic = new Epic("Epic", "Description", taskManager.generateId());
         taskManager.createEpic(epic);
 
-        Subtask subtask = new Subtask("Subtask", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
+        Subtask subtask = new Subtask(
+                        "Subtask",
+                        "Description",
+                        taskManager.generateId(),
+                        TaskStatus.NEW,
+                Duration.ofMinutes(45),
+                LocalDateTime.now().plusHours(2),
+                epic.getId()
+                );
         taskManager.createSubtask(subtask);
 
         taskManager.deleteSubtaskById(subtask.getId());
@@ -65,8 +90,24 @@ class InMemoryTaskManagerTest {
         Epic epic = new Epic("Epic", "Description", taskManager.generateId());
         taskManager.createEpic(epic);
 
-        Subtask subtask1 = new Subtask("Subtask 1", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
-        Subtask subtask2 = new Subtask("Subtask 2", "Description", taskManager.generateId(), TaskStatus.NEW, epic.getId());
+        Subtask subtask1 = new Subtask(
+                        "Subtask 1",
+                        "Description",
+                        taskManager.generateId(),
+                        TaskStatus.NEW,
+                Duration.ofMinutes(30),
+                LocalDateTime.now().plusHours(3),
+                epic.getId()
+                );
+        Subtask subtask2 = new Subtask(
+                        "Subtask 2",
+                        "Description",
+                        taskManager.generateId(),
+                        TaskStatus.NEW,
+                Duration.ofMinutes(30),
+                LocalDateTime.now().plusHours(4),
+                epic.getId()
+                );
         taskManager.createSubtask(subtask1);
         taskManager.createSubtask(subtask2);
 
