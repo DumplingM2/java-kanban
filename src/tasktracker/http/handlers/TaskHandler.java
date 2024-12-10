@@ -28,7 +28,6 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 if ("GET".equals(method)) {
                     sendText(exchange, gson.toJson(taskManager.getAllTasks()), 200);
                 } else if ("POST".equals(method)) {
-                    // POST для создания или обновления задачи
                     handleCreateOrUpdateTask(exchange);
                 } else {
                     sendText(exchange, "{\"error\": \"Method not allowed\"}", 405);
