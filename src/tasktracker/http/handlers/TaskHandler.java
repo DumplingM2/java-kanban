@@ -14,7 +14,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
     public TaskHandler(TaskManager taskManager) {
         this.taskManager = taskManager;
-        this.gson = tasktracker.http.HttpTaskServer.getGson(); // Используем единый Gson
+        this.gson = tasktracker.http.HttpTaskServer.getGson();
     }
 
     @Override
@@ -28,6 +28,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 if ("GET".equals(method)) {
                     sendText(exchange, gson.toJson(taskManager.getAllTasks()), 200);
                 } else if ("POST".equals(method)) {
+                    // POST для создания или обновления задачи
                     handleCreateOrUpdateTask(exchange);
                 } else {
                     sendText(exchange, "{\"error\": \"Method not allowed\"}", 405);
