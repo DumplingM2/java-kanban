@@ -1,49 +1,48 @@
 package tasktracker.http.handlers;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import tasktracker.manager.TaskManager;
 import tasktracker.tasks.Epic;
 
 import java.io.IOException;
 
-public class EpicHandler extends BaseHttpHandler implements HttpHandler {
+public class EpicHandler extends BaseHttpHandler {
     private final TaskManager taskManager;
-    private final Gson gson;
 
     public EpicHandler(TaskManager taskManager) {
         this.taskManager = taskManager;
-        this.gson = tasktracker.http.HttpTaskServer.getGson();
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        try {
-            String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath();
-
-            if ("/epics".equals(path)) {
-                handleEpics(exchange, method);
-            } else if (path.matches("/epics/\\d+/subtasks")) {
-                handleEpicSubtasks(exchange, method, path);
-            } else if (path.matches("/epics/\\d+")) {
-                handleEpicById(exchange, method, path);
+    protected void processGet(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if ("/epics".equals(path)) {
+            sendText(exchange, gson.toJson(taskManager.getAllEpics()), 200);
+        } else if (path.matches("/epics/\\d+")) {
+            int epicId = Integer.parseInt(path.split("/")[2]);
+            Epic epic = taskManager.getEpicById(epicId);
+            if (epic == null) {
+                sendNotFound(exchange, "Эпик не найден");
             } else {
-                sendNotFound(exchange, "Endpoint not found");
+                sendText(exchange, gson.toJson(epic), 200);
             }
-        } catch (IllegalArgumentException e) {
-            // Если задача/эпик пересекается — 406
-            sendHasInteractions(exchange, e.getMessage());
-        } catch (Exception e) {
-            sendText(exchange, "{\"error\": \"" + e.getMessage() + "\"}", 500);
+        } else if (path.matches("/epics/\\d+/subtasks")) {
+            int epicId = Integer.parseInt(path.split("/")[2]);
+            Epic epic = taskManager.getEpicById(epicId);
+            if (epic == null) {
+                sendNotFound(exchange, "Эпик не найден");
+            } else {
+                sendText(exchange, gson.toJson(taskManager.getSubtasksOfEpic(epicId)), 200);
+            }
+        } else {
+            sendNotFound(exchange, "Эндпоинт не найден");
         }
     }
 
-    private void handleEpics(HttpExchange exchange, String method) throws IOException {
-        if ("GET".equals(method)) {
-            sendText(exchange, gson.toJson(taskManager.getAllEpics()), 200);
-        } else if ("POST".equals(method)) {
+    @Override
+    protected void processPost(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if ("/epics".equals(path)) {
             String body = readRequestBody(exchange);
             Epic epic = gson.fromJson(body, Epic.class);
             if (epic.getId() == 0) {
@@ -52,55 +51,31 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
             } else {
                 Epic existing = taskManager.getEpicById(epic.getId());
                 if (existing == null) {
-                    sendNotFound(exchange, "Epic not found");
+                    sendNotFound(exchange, "Эпик не найден");
                     return;
                 }
                 taskManager.updateEpic(epic);
                 sendText(exchange, gson.toJson(epic), 200);
             }
         } else {
-            sendText(exchange, "{\"error\": \"Method not allowed\"}", 405);
+            sendNotFound(exchange, "Эндпоинт не найден");
         }
     }
 
-    private void handleEpicById(HttpExchange exchange, String method, String path) throws IOException {
-        try {
-            int epicId = Integer.parseInt(path.split("/")[2]);
-            if ("GET".equals(method)) {
-                Epic epic = taskManager.getEpicById(epicId);
-                if (epic == null) {
-                    sendNotFound(exchange, "Epic not found");
-                } else {
-                    sendText(exchange, gson.toJson(epic), 200);
-                }
-            } else if ("DELETE".equals(method)) {
-                Epic epic = taskManager.getEpicById(epicId);
-                if (epic == null) {
-                    sendNotFound(exchange, "Epic not found");
-                } else {
-                    taskManager.deleteEpicById(epicId);
-                    sendText(exchange, "{}", 200);
-                }
-            } else {
-                sendText(exchange, "{\"error\": \"Method not allowed\"}", 405);
-            }
-        } catch (NumberFormatException e) {
-            sendNotFound(exchange, "Invalid epic ID");
-        }
-    }
-
-    private void handleEpicSubtasks(HttpExchange exchange, String method, String path) throws IOException {
-        if ("GET".equals(method)) {
-            // GET /epics/{id}/subtasks
+    @Override
+    protected void processDelete(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if (path.matches("/epics/\\d+")) {
             int epicId = Integer.parseInt(path.split("/")[2]);
             Epic epic = taskManager.getEpicById(epicId);
             if (epic == null) {
-                sendNotFound(exchange, "Epic not found");
+                sendNotFound(exchange, "Эпик не найден");
             } else {
-                sendText(exchange, gson.toJson(taskManager.getSubtasksOfEpic(epicId)), 200);
+                taskManager.deleteEpicById(epicId);
+                sendText(exchange, "{}", 200);
             }
         } else {
-            sendText(exchange, "{\"error\": \"Method not allowed\"}", 405);
+            sendNotFound(exchange, "Эндпоинт не найден");
         }
     }
 }
