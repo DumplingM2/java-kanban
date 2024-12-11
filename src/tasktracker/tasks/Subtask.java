@@ -6,15 +6,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Subtask extends Task {
-    private int epicId; // ID эпика, к которому относится подзадача
+    private int epicId;
 
-    // Конструктор с новыми полями
     public Subtask(String title, String description, int id, TaskStatus status, Duration duration, LocalDateTime startTime, int epicId) {
         super(title, description, id, status, duration, startTime);
         this.epicId = epicId;
     }
 
-    // Геттеры и сеттеры
+    // Добавляем сеттер для id
+    public void setId(int id) {
+        super.setId(id);
+    }
+
     public int getEpicId() {
         return epicId;
     }
@@ -31,19 +34,5 @@ public class Subtask extends Task {
         return String.join(",", String.valueOf(getId()), "SUBTASK", getTitle(), getStatus().toString(),
                 getDescription(), String.valueOf(getDuration().toMinutes()),
                 getStartTime() != null ? getStartTime().toString() : "", String.valueOf(epicId));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Subtask)) return false;
-        if (!super.equals(o)) return false;
-        Subtask subtask = (Subtask) o;
-        return epicId == subtask.epicId;
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * super.hashCode() + epicId;
     }
 }
