@@ -14,7 +14,6 @@ public class Task {
     protected Duration duration;
     protected LocalDateTime startTime;
 
-    // Конструктор с новыми полями
     public Task(String title, String description, int id, TaskStatus status, Duration duration, LocalDateTime startTime) {
         this.title = title;
         this.description = description;
@@ -25,9 +24,17 @@ public class Task {
     }
 
     public Task(String title, String description, int id, TaskStatus taskStatus) {
+        this.title = title;
+        this.description = description;
+        this.id = id;
+        this.status = taskStatus;
     }
 
-    // Геттеры и сеттеры
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    // Геттер и сеттер для title
     public String getTitle() {
         return title;
     }
@@ -36,6 +43,7 @@ public class Task {
         this.title = title;
     }
 
+    // Геттер и сеттер для description
     public String getDescription() {
         return description;
     }
@@ -72,7 +80,6 @@ public class Task {
         this.startTime = startTime;
     }
 
-    // Метод для получения времени окончания задачи
     public LocalDateTime getEndTime() {
         if (startTime == null || duration == null) {
             return null;
@@ -84,6 +91,7 @@ public class Task {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Task task = (Task) o;
         return id == task.id &&
                 Objects.equals(title, task.title) &&
@@ -96,17 +104,5 @@ public class Task {
     @Override
     public int hashCode() {
         return Objects.hash(id, title, description, status, duration, startTime);
-    }
-
-    @Override
-    public String toString() {
-        return "Task{" +
-                "title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", id=" + id +
-                ", status=" + status +
-                ", duration=" + (duration != null ? duration.toMinutes() + " minutes" : "null") +
-                ", startTime=" + (startTime != null ? startTime : "null") +
-                '}';
     }
 }
